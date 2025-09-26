@@ -1,0 +1,8 @@
+openai
+pydantic
+tenacity
+pandas
+numpy
+tqdm
+matplotlib
+typing_extensions
