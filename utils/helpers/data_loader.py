@@ -2,6 +2,7 @@ import csv
 import pandas as pd
 import os
 from typing import Optional, Dict, Any
+from .summary import validate_review_data
 
 def load_and_clean_reviews(path: str, validate: bool = True) -> pd.DataFrame:
     """
