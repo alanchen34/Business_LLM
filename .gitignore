@@ -63,3 +63,6 @@ coverage.xml
 # Environment variable files
 .env
 .env.example
+
+# Reviewed data folder
+/analyzed_review_data/
