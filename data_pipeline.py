@@ -18,7 +18,7 @@ class ReviewDataPipeline:
     
     def __init__(self, 
                  target_year: int = 2012,
-                 target_samples: int = 4000,
+                 target_samples: int = 400,
                  random_seed: int = 42):
         """
         Initialize the pipeline with processing parameters.
@@ -179,6 +179,6 @@ def create_sample_pipeline():
     """
     return ReviewDataPipeline(
         target_year=2012,
-        target_samples=4000,
+        target_samples=400,
         random_seed=42
     )

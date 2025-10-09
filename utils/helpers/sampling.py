@@ -8,10 +8,20 @@ LENGTH_BINS = [0, 50, 200, 500, float("inf")]
 LENGTH_LABELS = ["short", "medium", "long", "extra_long"]
 
 
-def add_length_info(df: pd.DataFrame) -> pd.DataFrame:
+def add_length_info(df: pd.DataFrame, min_words: int = 5) -> pd.DataFrame:
+    """
+    Add word-count, filter out very short reviews, and assign length bins and month.
+
+    Args:
+        df (pd.DataFrame): Input reviews with columns review_body and review_date
+        min_words (int): Minimum number of words required to keep a review
+
+    Returns:
+        pd.DataFrame: Copy with review_length, length_bin, and month columns
+    """
     out = df.copy()
     out["review_length"] = out["review_body"].fillna("").str.split().str.len()
-    out = out[out["review_length"] > 0]
+    out = out[out["review_length"] >= min_words]
     out["length_bin"] = pd.cut(out["review_length"],
                                bins=LENGTH_BINS,
                                labels=LENGTH_LABELS,
@@ -22,16 +32,27 @@ def add_length_info(df: pd.DataFrame) -> pd.DataFrame:
   
 def stratified_sample_by_month_and_bin(df: pd.DataFrame,
                                        target_n: int,
-                                       seed: int = 42) -> pd.DataFrame:
+                                       seed: int = 42,
+                                       include_star: bool = True) -> pd.DataFrame:
+    """
+    Stratified sample across month and length bins, optionally including star ratings.
+
+    When include_star is True, groups are defined by (month, length_bin, star_rating).
+    Otherwise, groups are (month, length_bin) as before.
+    """
     rng = np.random.default_rng(seed)
 
     # valid cells only (drop NaT months or NA bins)
-    work = df.dropna(subset=["month", "length_bin"])
+    work = df.dropna(subset=["month", "length_bin"]).copy()
+    if include_star and "star_rating" in work.columns:
+        # keep only valid 1-5 star ratings when star stratification is enabled
+        work = work[work["star_rating"].between(1, 5)]
     if work.empty:
         return work
 
-    # groups = each (month, length_bin)
-    groups = list(work.groupby(["month", "length_bin"], observed=True))
+    # groups = each (month, length_bin[, star_rating])
+    group_keys = ["month", "length_bin"] + (["star_rating"] if include_star else [])
+    groups = list(work.groupby(group_keys, observed=True))
     cell_sizes = np.array([len(g) for _, g in groups], dtype=int)
     n_cells = len(groups)
 
@@ -99,3 +120,9 @@ def print_sampling_summary(df: pd.DataFrame) -> None:
     month_counts = df["month"].value_counts().sort_index()
     for month, count in month_counts.items():
         print(f"  {month}: {count}")
+
+    if "star_rating" in df.columns:
+        print(f"Rating distribution:")
+        for rating in [1, 2, 3, 4, 5]:
+            count = (df["star_rating"] == rating).sum()
+            print(f"  {rating}: {count}")
