@@ -78,4 +78,4 @@ coverage.xml
 .env.example
 
 # Reviewed data folder
-/analyzed_review_data/
+# /analyzed_review_data/
